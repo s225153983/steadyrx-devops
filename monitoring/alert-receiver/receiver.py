@@ -7,6 +7,7 @@ the Jenkins Monitoring stage) can read them at /alerts or view them at /.
 
 import html
 import json
+import time
 from collections import deque
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -17,12 +18,14 @@ EVENTS = deque(maxlen=200)
 def _flatten(payload):
     """Turn an Alertmanager webhook payload into one event per alert."""
     now = datetime.now(timezone.utc).isoformat()
+    epoch = round(time.time(), 3)
     alerts = payload.get("alerts") or [payload]
     for alert in alerts:
         labels = alert.get("labels", {})
         notes = alert.get("annotations", {})
         yield {
             "received_at": now,
+            "received_epoch": epoch,
             "status": alert.get("status", payload.get("status", "firing")),
             "alertname": labels.get("alertname", payload.get("alertname", "unknown")),
             "severity": labels.get("severity", payload.get("severity", "info")),
