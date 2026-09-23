@@ -1,0 +1,32 @@
+# Infrastructure as code for one SteadyRx environment.
+# The same file deploys staging and production. Environment-specific values
+# come from deploy/config/<env>.env, and IMAGE_TAG is set by Jenkins so both
+# environments run the exact image that passed the earlier stages.
+services:
+  api:
+    image: ${REGISTRY:-localhost:5000}/steadyrx-api:${IMAGE_TAG:?IMAGE_TAG must be set}
+    container_name: steadyrx-${DEPLOY_ENV}
+    env_file:
+      - config/${DEPLOY_ENV}.env
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+    ports:
+      - "${HOST_PORT}:8000"
+    volumes:
+      - data:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+    labels:
+      com.steadyrx.environment: ${DEPLOY_ENV}
+
+volumes:
+  data:
