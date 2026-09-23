@@ -33,6 +33,12 @@ Python 3.12, FastAPI, SQLite, PyJWT, Prometheus client, pytest, Docker, Docker C
 | Release | Promote the same image to `v1.0.<build>` and `stable`, deploy to production, smoke tests, Git tag, release notes | Docker registry, Docker Compose |
 | Monitoring | Prometheus, Alertmanager, Grafana and the team alert channel, target and rule checks, incident drill | Prometheus, Alertmanager, Grafana |
 
+## Reports
+
+* SonarCloud dashboard: https://sonarcloud.io/summary/overall?id=s225153983_steadyrx-devops
+* Security findings and decisions: [SECURITY.md](SECURITY.md)
+* Every Jenkins build archives `reports/` (JUnit, coverage, lint, Bandit, pip-audit, Trivy, release notes, monitoring summary and incident drill results).
+
 ## Run it locally
 
 ```bash
