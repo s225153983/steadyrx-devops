@@ -4,7 +4,7 @@ param([string]$Status = 'FAILED', [string]$Summary = '', [string]$Severity = 'cr
 . "$PSScriptRoot\common.ps1"
 $body = @{
     alertname = 'JenkinsPipeline' + $Status
-    status = 'firing'
+    status = $(if ($Status -eq 'FAILED') { 'firing' } else { 'info' })
     severity = $Severity
     team = 'steadyrx'
     summary = $Summary

@@ -7,7 +7,7 @@ $reports = Join-Path $RepoRoot 'reports'
 New-Item -ItemType Directory -Force -Path $reports | Out-Null
 $lastTag = Get-CmdOutput 'git describe --tags --abbrev=0 HEAD^'
 if ($lastTag) { $range = "$lastTag..HEAD" } else { $range = 'HEAD' }
-$commits = Get-CmdOutput "git log $range --pretty=format:""- %h %s (%an)"" -n 20"
+$commits = (& git log $range --pretty=format:'- %h %s (%an)' -n 20 2>$null | Out-String).Trim()
 $digest = Get-CmdOutput "docker inspect --format ""{{index .RepoDigests 0}}"" $Registry/steadyrx-api:v$Version"
 
 $notes = @"
