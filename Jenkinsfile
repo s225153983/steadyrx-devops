@@ -53,7 +53,8 @@ pipeline {
                     currentBuild.description = "commit ${env.GIT_SHORT}, image ${env.IMAGE}:${env.IMAGE_TAG}"
                 }
                 echo "Building ${IMAGE}:${IMAGE_TAG} from commit ${GIT_SHORT}"
-                bat 'if exist reports rmdir /s /q reports & mkdir reports'
+                bat 'if exist reports rmdir /s /q reports'
+                bat 'mkdir reports'
                 powershell '& .\\ci\\ensure-docker.ps1'
                 powershell '& .\\ci\\ensure-registry.ps1'
                 bat 'docker build --target runtime --build-arg APP_VERSION=%VERSION% --build-arg BUILD_SHA=%GIT_SHORT% -t %REGISTRY%/%IMAGE%:%IMAGE_TAG% .'
