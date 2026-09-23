@@ -1,0 +1,15 @@
+[MASTER]
+ignore=.venv,tests
+
+[MESSAGES CONTROL]
+# Docstrings are required on modules and public classes but not on every
+# small FastAPI route handler, which is documented by the OpenAPI schema.
+disable=missing-function-docstring,too-few-public-methods,too-many-arguments,
+        too-many-positional-arguments,too-many-instance-attributes,duplicate-code
+
+[FORMAT]
+max-line-length=100
+
+[DESIGN]
+max-locals=15
+max-branches=12

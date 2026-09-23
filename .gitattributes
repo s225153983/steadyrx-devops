@@ -1,0 +1,6 @@
+# Shell scripts run inside Linux containers, so they must keep LF endings
+# even when Git on Windows checks the repository out with CRLF.
+*.sh text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
+Dockerfile text eol=lf
