@@ -63,22 +63,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         _seed_medicines(service)
     service.refresh_gauges()
 
-    app = FastAPI(title="SteadyRx API", version=settings.app_version,
-                  description="Early warning of medicine-related falls")
-    app.state.settings = settings
-    app.state.service = service
-    app.state.decode = lambda token: decode_token(token, settings.jwt_secret)
+    application = FastAPI(title="SteadyRx API", version=settings.app_version,
+                          description="Early warning of medicine-related falls")
+    application.state.settings = settings
+    application.state.service = service
+    application.state.decode = lambda token: decode_token(token, settings.jwt_secret)
     APP_INFO.info({"version": settings.app_version,
                    "environment": settings.app_env,
                    "build_sha": settings.build_sha})
 
     if settings.allowed_origins:
-        app.add_middleware(CORSMiddleware,
-                           allow_origins=settings.allowed_origins,
-                           allow_methods=["GET", "POST"],
-                           allow_headers=["Authorization", "Content-Type"])
+        application.add_middleware(CORSMiddleware,
+                                   allow_origins=settings.allowed_origins,
+                                   allow_methods=["GET", "POST"],
+                                   allow_headers=["Authorization", "Content-Type"])
 
-    @app.middleware("http")
+    @application.middleware("http")
     async def observe(request: Request, call_next):
         start = time.perf_counter()
         status_code = 500
@@ -97,10 +97,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "method": request.method, "route": template,
                     "status": status_code, "ms": round(elapsed * 1000, 1)}})
 
-    app.include_router(ops.router)
-    app.include_router(auth.router)
-    app.include_router(clinical.router)
-    return app
+    application.include_router(ops.router)
+    application.include_router(auth.router)
+    application.include_router(clinical.router)
+    return application
 
 
 app = create_app()
