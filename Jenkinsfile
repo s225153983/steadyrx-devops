@@ -23,9 +23,12 @@ pipeline {
         IMAGE          = 'steadyrx-api'
         VERSION_PREFIX = '1.0'
         DOCKER_BUILDKIT = '1'
-        // Docker Desktop CLI location, so the Jenkins service finds docker
-        // even if it started before Docker Desktop was installed.
-        PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
+        // Jenkins runs as a Windows service (Local System). These settings
+        // point it at the per-user Docker Desktop install and its engine.
+        DOCKER_DESKTOP = 'C:\\Users\\yapha\\AppData\\Local\\Programs\\DockerDesktop'
+        DOCKER_HOST    = 'npipe:////./pipe/dockerDesktopLinuxEngine'
+        DOCKER_CONFIG  = 'C:\\ProgramData\\Jenkins\\.jenkins\\steadyrx-docker'
+        PATH = "C:\\Users\\yapha\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;${env.PATH}"
     }
 
     triggers {
@@ -51,6 +54,7 @@ pipeline {
                 }
                 echo "Building ${IMAGE}:${IMAGE_TAG} from commit ${GIT_SHORT}"
                 bat 'if exist reports rmdir /s /q reports & mkdir reports'
+                powershell '& .\\ci\\ensure-docker.ps1'
                 powershell '& .\\ci\\ensure-registry.ps1'
                 bat 'docker build --target runtime --build-arg APP_VERSION=%VERSION% --build-arg BUILD_SHA=%GIT_SHORT% -t %REGISTRY%/%IMAGE%:%IMAGE_TAG% .'
                 bat 'docker build --target test -t steadyrx-test:%IMAGE_TAG% .'
