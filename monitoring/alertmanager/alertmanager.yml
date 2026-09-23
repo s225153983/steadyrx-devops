@@ -1,0 +1,17 @@
+route:
+  receiver: team-webhook
+  group_by: ["alertname", "environment"]
+  group_wait: 5s
+  group_interval: 30s
+  repeat_interval: 1h
+  routes:
+    - matchers: ['severity="critical"']
+      receiver: team-webhook
+      group_wait: 0s
+
+receivers:
+  - name: team-webhook
+    webhook_configs:
+      - url: http://alert-receiver:9095/alert
+        send_resolved: true
+    # To page a real team, add a slack_configs or email_configs block here.
