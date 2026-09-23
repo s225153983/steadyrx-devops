@@ -31,7 +31,13 @@ LABEL org.opencontainers.image.title="steadyrx-api" \
 ENV APP_VERSION=${APP_VERSION} \
     BUILD_SHA=${BUILD_SHA} \
     DATABASE_PATH=/data/steadyrx.db
-RUN useradd --create-home --uid 10001 steadyrx \
+# Production never installs packages at run time, so the package tooling is
+# removed. This shrinks the attack surface and removes the vendored msgpack
+# and the old setuptools that Trivy flagged as HIGH (see SECURITY.md).
+RUN python -m pip uninstall -y pip setuptools wheel || true \
+    && find /usr/local/lib -depth \( -name 'setuptools*' -o -name 'pip' -o -name 'pip-*' \
+         -o -name 'msgpack*' -o -name 'ensurepip' -o -name 'wheel-*' \) -exec rm -rf {} + \
+    && useradd --create-home --uid 10001 steadyrx \
     && mkdir -p /data && chown steadyrx:steadyrx /data
 COPY app ./app
 USER steadyrx

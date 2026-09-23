@@ -133,7 +133,7 @@ pipeline {
                 bat 'docker push %REGISTRY%/%IMAGE%:stable'
                 powershell '& .\\ci\\deploy.ps1 -Environment production -ImageTag "v$env:VERSION" -ExpectedVersion $env:VERSION'
                 bat 'docker run --rm -e BASE_URL=http://host.docker.internal:8000 -e EXPECTED_VERSION=%VERSION% -v "%WORKSPACE%\\reports:/app/reports" steadyrx-test:%IMAGE_TAG% pytest tests/smoke --junitxml=reports/smoke-production.xml'
-                bat 'git tag -f -a v%VERSION% -m "SteadyRx release v%VERSION% (Jenkins build %BUILD_NUMBER%)"'
+                bat 'git -c user.name=Jenkins -c user.email=jenkins@steadyrx.local tag -f -a v%VERSION% -m "SteadyRx release v%VERSION% (Jenkins build %BUILD_NUMBER%)"'
                 powershell '& .\\ci\\release-notes.ps1 -Version $env:VERSION -ImageTag $env:IMAGE_TAG'
                 script {
                     // Pushing the Git tag is optional. It runs only when a
