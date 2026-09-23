@@ -5,7 +5,8 @@ param([Parameter(Mandatory)][string]$Version, [Parameter(Mandatory)][string]$Ima
 
 $reports = Join-Path $RepoRoot 'reports'
 New-Item -ItemType Directory -Force -Path $reports | Out-Null
-$lastTag = Get-CmdOutput 'git describe --tags --abbrev=0 HEAD^'
+# HEAD~1 rather than HEAD^ because ^ is an escape character in cmd.
+$lastTag = (& git describe --tags --abbrev=0 HEAD~1 2>$null | Out-String).Trim()
 if ($lastTag) { $range = "$lastTag..HEAD" } else { $range = 'HEAD' }
 $commits = (& git log $range --pretty=format:'- %h %s (%an)' -n 20 2>$null | Out-String).Trim()
 $digest = Get-CmdOutput "docker inspect --format ""{{index .RepoDigests 0}}"" $Registry/steadyrx-api:v$Version"
