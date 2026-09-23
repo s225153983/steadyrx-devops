@@ -181,6 +181,13 @@
           "unit": "reqps"
         },
         "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
       }
     },
     {
@@ -200,7 +207,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(steadyrx_http_requests_total{job=\"steadyrx-production\",status=~\"5..\"}[1m])) / clamp_min(sum(rate(steadyrx_http_requests_total{job=\"steadyrx-production\"}[1m])),0.001)",
+          "expr": "(sum(rate(steadyrx_http_requests_total{job=\"steadyrx-production\",status=~\"5..\"}[1m])) or vector(0)) / clamp_min(sum(rate(steadyrx_http_requests_total{job=\"steadyrx-production\"}[1m])), 0.001)",
           "legendFormat": "5xx ratio"
         }
       ],
@@ -209,6 +216,13 @@
           "unit": "percentunit"
         },
         "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
       }
     },
     {
@@ -237,6 +251,13 @@
           "unit": "s"
         },
         "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
       }
     },
     {
@@ -263,6 +284,13 @@
       "fieldConfig": {
         "defaults": {},
         "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
       }
     },
     {
