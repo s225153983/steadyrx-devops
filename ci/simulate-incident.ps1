@@ -16,7 +16,8 @@ function Get-Epoch { return [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() / 
 function Wait-Alert([string]$Name, [string]$Status, [double]$Since) {
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
-        $events = @(Invoke-Json $receiver)
+        # Windows PowerShell returns a JSON array as one object, so unroll it.
+        $events = @((Invoke-Json $receiver) | ForEach-Object { $_ })
         $hit = $events | Where-Object {
             $_.alertname -eq $Name -and $_.status -eq $Status -and
             ([double]$_.received_epoch -ge $Since)
