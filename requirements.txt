@@ -1,0 +1,7 @@
+# Runtime dependencies. Versions are pinned so every build is reproducible
+# and pip-audit checks exactly what ships in the Docker image.
+fastapi==0.141.1
+uvicorn==0.53.0
+pydantic==2.13.5
+PyJWT==2.14.0
+prometheus-client==0.26.0
