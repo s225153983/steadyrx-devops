@@ -23,6 +23,9 @@ pipeline {
         IMAGE          = 'steadyrx-api'
         VERSION_PREFIX = '1.0'
         DOCKER_BUILDKIT = '1'
+        // Docker Desktop CLI location, so the Jenkins service finds docker
+        // even if it started before Docker Desktop was installed.
+        PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
     }
 
     triggers {
