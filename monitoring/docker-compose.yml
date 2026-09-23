@@ -1,0 +1,59 @@
+# Monitoring and alerting stack for SteadyRx.
+# Prometheus scrapes the production and staging APIs, evaluates alert rules
+# and sends firing alerts to Alertmanager. Alertmanager routes them to the
+# team alert receiver (a stand-in for Slack, Teams or PagerDuty).
+# Grafana shows the live dashboard.
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: steadyrx-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: steadyrx-alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+
+  alert-receiver:
+    build: ./alert-receiver
+    image: steadyrx-alert-receiver:local
+    container_name: steadyrx-alert-receiver
+    ports:
+      - "9095:9095"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    container_name: steadyrx-grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/steadyrx.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:
