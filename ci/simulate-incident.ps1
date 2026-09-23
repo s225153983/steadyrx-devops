@@ -11,13 +11,15 @@ param([ValidateSet('brute-force', 'api-down')][string]$Scenario = 'brute-force',
 $prod = 'http://localhost:8000'
 $receiver = 'http://localhost:9095/alerts'
 
-function Wait-Alert([string]$Name, [string]$Status, [datetime]$Since) {
+function Get-Epoch { return [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() / 1000.0 }
+
+function Wait-Alert([string]$Name, [string]$Status, [double]$Since) {
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
         $events = @(Invoke-Json $receiver)
         $hit = $events | Where-Object {
             $_.alertname -eq $Name -and $_.status -eq $Status -and
-            ([datetime]::Parse($_.received_at).ToUniversalTime() -ge $Since)
+            ([double]$_.received_epoch -ge $Since)
         } | Select-Object -First 1
         if ($hit) { return $hit }
         Start-Sleep -Seconds 3
@@ -25,7 +27,7 @@ function Wait-Alert([string]$Name, [string]$Status, [datetime]$Since) {
     return $null
 }
 
-$start = (Get-Date).ToUniversalTime()
+$start = Get-Epoch
 if ($Scenario -eq 'brute-force') {
     $alertName = 'SteadyRxLoginFailureSpike'
     Write-Host 'Simulating a password guessing attack with 25 failed logins'
@@ -44,17 +46,17 @@ if (-not $fired) {
     if ($Scenario -eq 'api-down') { Invoke-Cmd 'docker start steadyrx-production' -AllowFail | Out-Null }
     throw "$alertName was not delivered to the team channel within $TimeoutSeconds seconds"
 }
-$ttd = [math]::Round(([datetime]::Parse($fired.received_at).ToUniversalTime() - $start).TotalSeconds, 1)
+$ttd = [math]::Round([double]$fired.received_epoch - $start, 1)
 Write-Host "ALERT DELIVERED: $alertName ($($fired.severity)) in $ttd s - $($fired.summary)"
 
 $result = [ordered]@{ scenario = $Scenario; alert = $alertName; time_to_detect_seconds = $ttd }
 if ($Scenario -eq 'api-down') {
-    $recover = (Get-Date).ToUniversalTime()
+    $recover = Get-Epoch
     Invoke-Cmd 'docker start steadyrx-production' | Out-Null
     if (-not (Wait-Healthy -BaseUrl $prod)) { throw 'Production did not recover after the drill' }
     $resolved = Wait-Alert $alertName 'resolved' $recover
     if ($resolved) {
-        $result.time_to_resolve_seconds = [math]::Round(([datetime]::Parse($resolved.received_at).ToUniversalTime() - $recover).TotalSeconds, 1)
+        $result.time_to_resolve_seconds = [math]::Round([double]$resolved.received_epoch - $recover, 1)
         Write-Host "RESOLVED notification received after $($result.time_to_resolve_seconds) s"
     }
 }
