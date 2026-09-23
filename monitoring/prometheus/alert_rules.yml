@@ -1,0 +1,56 @@
+groups:
+  - name: steadyrx-production
+    rules:
+      - alert: SteadyRxApiDown
+        expr: up{job="steadyrx-production"} == 0
+        for: 20s
+        labels:
+          severity: critical
+          team: steadyrx
+        annotations:
+          summary: "SteadyRx production API is down"
+          description: "Prometheus cannot scrape {{ $labels.instance }}. Pharmacists cannot see the risk queue."
+          runbook: "Run 'docker compose -p steadyrx-production ps' and redeploy the last stable tag."
+
+      - alert: SteadyRxHighErrorRate
+        expr: |
+          sum(rate(steadyrx_http_requests_total{job="steadyrx-production",status=~"5.."}[1m]))
+            / clamp_min(sum(rate(steadyrx_http_requests_total{job="steadyrx-production"}[1m])), 0.001) > 0.05
+        for: 30s
+        labels:
+          severity: critical
+          team: steadyrx
+        annotations:
+          summary: "More than 5% of production requests are failing"
+          description: "5xx ratio is {{ $value | humanizePercentage }} over the last minute."
+
+      - alert: SteadyRxSlowResponses
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(steadyrx_http_request_duration_seconds_bucket{job="steadyrx-production"}[2m]))) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+          team: steadyrx
+        annotations:
+          summary: "p95 latency above 500 ms"
+          description: "95th percentile latency is {{ $value }} seconds."
+
+      - alert: SteadyRxLoginFailureSpike
+        expr: increase(steadyrx_login_failures_total{job="steadyrx-production"}[1m]) > 10
+        for: 0s
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Possible password guessing against SteadyRx"
+          description: "{{ $value | humanize }} failed logins in the last minute."
+
+      - alert: SteadyRxHighRiskBacklog
+        expr: steadyrx_open_alerts{job="steadyrx-production",risk="HIGH"} >= 5
+        for: 1m
+        labels:
+          severity: warning
+          team: pharmacy
+        annotations:
+          summary: "Five or more HIGH falls-risk alerts are waiting for review"
+          description: "{{ $value }} HIGH alerts are open. Add pharmacist capacity."
