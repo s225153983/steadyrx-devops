@@ -16,7 +16,10 @@ def test_password_round_trip():
 
 
 def test_same_password_gets_different_salt():
-    assert hash_password("x") != hash_password("x")
+    first = hash_password("x")
+    second = hash_password("x")
+    assert first != second
+    assert verify_password("x", first) and verify_password("x", second)
 
 
 def test_malformed_hash_is_rejected():
